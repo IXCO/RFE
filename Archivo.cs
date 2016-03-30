@@ -2,15 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 using System.Xml.Linq;
 using System.Xml;
 using System.Data.OleDb;
 using System.IO;
+using System.Xml.XPath;
+using System.Xml.Xsl;
 using Limilabs.Mail;
 using Limilabs.Client.POP3;
 using Limilabs.Mail.MIME;
+using System.Security.Cryptography;
 namespace RFE
 {
     class Archivo
@@ -223,11 +227,60 @@ namespace RFE
             }
             return uuid;
         }
+        private byte[] getOriginalChain()
+        {
+            StreamReader reader = new StreamReader(saveDirectory + nameOfXMLFile);
+            XPathDocument myXPathDoc = new XPathDocument(reader);
+
+            //Load XSL
+            XslCompiledTransform myXslTrans = new XslCompiledTransform();
+            myXslTrans.Load(backupDirectory+"cadenaoriginal_3_2.xslt");
+
+            StringWriter str = new StringWriter();
+            XmlTextWriter myWriter = new XmlTextWriter(str);
+
+            //Transformation
+            myXslTrans.Transform(myXPathDoc, null, myWriter);
+            Console.WriteLine(str.ToString());
+            //result
+            return Encoding.UTF8.GetBytes(str.ToString());
+                       
+        }
+        private bool checkStamp(string stampToprocess,string certificateToprocess)
+        {
+            try
+            {
+                //Gets certificate
+                X509Certificate2 createdCertificate = new X509Certificate2(Convert.FromBase64String(certificateToprocess));
+                //Converts to public key
+                string stringpublicKey = createdCertificate.PublicKey.Key.ToXmlString(false);
+                AsymmetricAlgorithm publicKey = AsymmetricAlgorithm.Create();
+                publicKey.FromXmlString(stringpublicKey);
+                RSACryptoServiceProvider rsa = (RSACryptoServiceProvider)publicKey;
+                rsa.PersistKeyInCsp = false;
+                // Hash the data
+                SHA1CryptoServiceProvider sha = new SHA1CryptoServiceProvider();
+                byte[] data = getOriginalChain();
+                byte[] sign = Convert.FromBase64String(stampToprocess);
+                byte[] hash = sha.ComputeHash(data);
+
+                return rsa.VerifyHash(hash, CryptoConfig.MapNameToOID("SHA1"), sign);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: No se pudo desencriptar el sello. ");
+                Console.WriteLine(ex.Message);
+                return false;
+
+            }
+        }
         public Factura getFactura()
         {
             Factura invoice = new Factura();
             String[] values = new String[5];
-            
+            string stampOriginal =  null;
+            string certificateOriginal = null;
+                //Gets values of the attributes that are needed
                 try
                 {
                     XElement rootElement = XElement.Load(saveDirectory + nameOfXMLFile);
@@ -247,6 +300,30 @@ namespace RFE
                     {
                         values[4] = "";
                     }
+                    if (rootElement.Attributes("certificado").LongCount() > 0)
+                    {
+                        certificateOriginal =rootElement.Attribute("certificado").Value;
+                    }
+                    if (rootElement.Attributes("sello").LongCount() > 0)
+                    {
+                        stampOriginal=rootElement.Attribute("sello").Value;
+                    }
+                    //Decyphers digital stamp and validates
+                    if (stampOriginal != null && certificateOriginal != null)
+                    {
+                        if (!checkStamp(stampOriginal, certificateOriginal))
+                        {
+                            Console.WriteLine("Error: Sello digital no es correcto");
+                            return invoice = new Factura("Sello digital incorrecto");
+                        }
+                        Console.WriteLine("Es correcto!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: Falta sello/certificado");
+                        return invoice = new Factura("Falta sello/certificado");
+                    }
+                    //Looks on on the childs for the needed values of the verification chain
                     IEnumerable<XElement> allElements = rootElement.Elements();
                     foreach (XElement innerElement in allElements)
                     {

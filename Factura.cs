@@ -34,6 +34,10 @@ namespace RFE
             uuid = Uuid;
             
         }
+        public Factura(String errorReported)
+        {
+            error = errorReported;
+        }
         public String getChain()
         {
             return "?re=" + senderRFC + "&rr="+recepientRFC+"&tt="+total+"&id="+uuid;

@@ -193,7 +193,7 @@ namespace RFE
                                                     files.deleteXMLFile();
                                                     files.clearWorkingDirectory();
                                                 }
-
+                                                
                                             }
                                             else
                                             {
@@ -201,7 +201,7 @@ namespace RFE
                                                 dbAccess.insertErrorIncorrectInformation(internalMail.from);
                                                 Console.WriteLine("Error: Faltan campos en el XML");
                                                 Console.WriteLine("Enviando correo de error...");
-                                                internalMail.sendErrorEmail("Faltas al Anexo 20, faltas al esquema del archivo. '"+invoice.error+"'");
+                                                internalMail.sendErrorEmail("Faltas al Anexo 20, faltas al esquema del archivo. '" + invoice.error + "'");
                                                 files.deleteXMLFile();
                                                 files.clearWorkingDirectory();
 
@@ -243,11 +243,11 @@ namespace RFE
             }
             Console.WriteLine("Fin de receptor");
             //Starts second section of request-invoice
-       Console.WriteLine("Inicia revision de solicitudes pendientes...");
-       checkForPendingInvoice();
-       Console.WriteLine("Finaliza proceso.");
+            Console.WriteLine("Inicia revision de solicitudes pendientes...");
+            checkForPendingInvoice();
+            Console.WriteLine("Finaliza proceso.");
             //TODO: Eliminar para productivo
-      // Console.Read();
+            Console.Read();
         }
         
     }
