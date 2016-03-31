@@ -9,7 +9,7 @@ namespace RFE
     class ControladorBD
     {
 
-        public MySqlConnection connection;
+        private MySqlConnection connection;
         public ControladorBD()
         {
             connection = new MySqlConnection();

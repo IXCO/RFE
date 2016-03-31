@@ -229,6 +229,11 @@ namespace RFE
         }
         private byte[] getOriginalChain()
         {
+            /*
+             * Gets original chain of characters 
+             * according to the current structure
+             * for cfdi generation
+             */
             StreamReader reader = new StreamReader(saveDirectory + nameOfXMLFile);
             XPathDocument myXPathDoc = new XPathDocument(reader);
 
@@ -241,7 +246,7 @@ namespace RFE
 
             //Transformation
             myXslTrans.Transform(myXPathDoc, null, myWriter);
-            Console.WriteLine(str.ToString());
+
             //result
             return Encoding.UTF8.GetBytes(str.ToString());
                        
@@ -263,7 +268,7 @@ namespace RFE
                 byte[] data = getOriginalChain();
                 byte[] sign = Convert.FromBase64String(stampToprocess);
                 byte[] hash = sha.ComputeHash(data);
-
+                //Mades SHA Digest
                 return rsa.VerifyHash(hash, CryptoConfig.MapNameToOID("SHA1"), sign);
             }
             catch (Exception ex)
@@ -311,10 +316,11 @@ namespace RFE
                     //Decyphers digital stamp and validates
                     if (stampOriginal != null && certificateOriginal != null)
                     {
+                        Console.WriteLine("Validando sello y certificado...");
                         if (!checkStamp(stampOriginal, certificateOriginal))
                         {
                             Console.WriteLine("Error: Sello digital no es correcto");
-                            return invoice = new Factura("Sello digital incorrecto");
+                            return invoice = new Factura("Sello digital y/o certificado incorrecto(s)");
                         }
                         Console.WriteLine("Es correcto!");
                     }
@@ -352,7 +358,9 @@ namespace RFE
                             rootElement.Element(elementsName).Remove();
                         }
                     }
+                    //Saves working file
                     rootElement.Save(saveDirectory + nameOfXMLFile);
+                    //Checks squema vs file layout
                     invoice.error=hasCorrectSchema();
                     if (invoice.error == null)
                     {
@@ -361,11 +369,14 @@ namespace RFE
 
                 }
                 catch (Exception)
-                {}
+                {
+                    Console.WriteLine("Error: Couldn't read nodes properly");
+                    invoice.error = "No se pudieron leer los atributos del XML";
+                }
             
             return invoice;
         }
-        public String hasCorrectSchema()
+        private String hasCorrectSchema()
         {
             try
             {

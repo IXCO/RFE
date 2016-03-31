@@ -19,7 +19,7 @@ namespace RFE
             Email mail = new Email();
             //Gets pending request for new invoice
             Factura[] pendingInvoices = dbAccess.getPendingInvoice();
-            Console.WriteLine("Checando solicitude pendientes de proveedores nuevos...");
+            Console.WriteLine("Checando solicitudes pendientes de proveedores nuevos...");
             foreach (Factura invoice in pendingInvoices)
             {
                 
@@ -29,10 +29,10 @@ namespace RFE
                     Console.WriteLine("Procesando solicitud nueva");
                     Solicitud request = dbAccess.getRequestMain(invoice);
                     //Checks for duplicity
-                    if (! dbAccess.existenceRequest(request))
+                    if (!dbAccess.existenceRequest(request))
                     {
                         //Send email to requester and direct chief, according to society and department.
-                        mail.subject="Solicitud de aprobación";
+                        mail.subject = "Solicitud de aprobación";
                         String emailContent = "La factura No. " + request.invoiceNo + " del proveedor " + request.sender +
                         "por un total de: $" + request.total + " ha sido recibida y validada, por lo que se generó una solicitud de egresos.";
                         Console.WriteLine("Agregando solicitud a BD");
@@ -46,6 +46,10 @@ namespace RFE
                         Console.WriteLine("Enviando correo a jefe directo");
                         mail.sendAuthorizationEmail(emailContent, request.uuid, request.society.ToString());
                         Console.WriteLine("Termina con solicitud");
+                        dbAccess.deletePending(request.uuid);
+                    }
+                    else
+                    {
                         dbAccess.deletePending(request.uuid);
                     }
                 }
@@ -77,19 +81,19 @@ namespace RFE
                     Console.WriteLine("Total de correos = " + mailConnection.GetAll().Count().ToString());
                     foreach (String mailIdentifier in mailConnection.GetAll())
                     {
-                        Console.WriteLine("Procesando correo en el indice " + emailCounter.ToString());
+                        Console.WriteLine("Procesando correo no." + (emailCounter + 1).ToString());
                         //Limits the email processor quantity
                         if (emailCounter <= 20)
                         {
                             //Anti bot checking section
-                            Console.WriteLine("Revisando que no sea correo basura...");
+                            Console.Write("Revisando que no sea correo basura...");
                             //Internal classes used initialize
                             ControladorBD dbAccess = new ControladorBD();
                             Email internalMail = new Email(mailIdentifier, mailConnection);
                             //Checks for no bot account on the sender
                             if (internalMail.hasValidAddress())
                             {
-                                Console.WriteLine("Exito!");
+                                Console.Write("Exito!\n");
                                 //Checks for at least one attached file
                                 Console.WriteLine("Verificando adjuntos...");
                                 if (internalMail.totalAttachments == 0)
@@ -123,31 +127,42 @@ namespace RFE
                                     else
                                     {
                                         //Read identifier from XML content
-                                        Console.WriteLine("Obteniendo identificador del XML...");
+                                        Console.Write("Obteniendo identificador del XML...");
                                         String[] fileXml = files.getXMLFile();
                                         String actualIdentifier = files.getXMLId(fileXml[0]);
-                                        //First Structure Checks if the XML format has the UUID else send error
+                                        //First Validation
+                                        //----------------------------------------------
+                                        //Structure Checks if the XML format has the UUID else send error
                                         if (actualIdentifier != null)
                                         {
                                             //Creates current names for files
                                             files = new Archivo(actualIdentifier);
-                                            Console.Write("Exito!\n");
+                                            Console.Write("Exito! \n");
                                             files.renameXML(fileXml[0]);
                                             //Extra backup of oiginal XML
                                             files.backupFiles();
                                             Factura invoice = files.getFactura();
-                                            //Second structure check with required fields and schema
+                                            //Second Validation
+                                            //-----------------------------------------------
+                                            //Structure check with required fields, valid digital stamp and correct schema
                                             if (invoice.error == null)
                                             {
-                                                //Security check for a correct RFC
+                                                //Third validation
+                                                //-------------------------------------------
+                                                //Security check for a correct/valid RFC
+                                                Console.Write("Validando RFC de receptor...");
                                                 if (invoice.hasValidRFC())
                                                 {
-
+                                                    Console.Write("Exito! \n");
                                                     String[] filePdf = files.getPDFFileIfExist();
+                                                    //Fourth validation
+                                                    //---------------------------------------
+                                                    //SAT's service online response
+                                                    Console.WriteLine("Revisando en SAT");
                                                     switch (invoice.statusOnSAT())
                                                     {
                                                         case 0: //Mistake at connection
-                                                        case 2://Pending
+                                                        case 2: //Pending
                                                         case 1: //Successful
                                                             dbAccess.insertReceived(internalMail.from, invoice.uuid);
                                                             dbAccess.insertPending(files.nameOfXMLFile, invoice.recepientRFC, invoice.senderRFC, invoice.folio);
@@ -164,7 +179,7 @@ namespace RFE
                                                             dbAccess.insertCanceled(files.nameOfXMLFile, invoice.recepientRFC, invoice.senderRFC, invoice.folio);
                                                             Console.WriteLine("Error: Comprobante cancelado");
                                                             Console.WriteLine("Enviando correo de error...");
-                                                            internalMail.sendErrorEmail("El comprobante que mando NO fue aceptado, debido a que se encuentra cancelado ante el SAT.");
+                                                            internalMail.sendErrorEmail("El comprobante con UUID: '"+invoice.uuid+"' que mando NO fue aceptado, debido a que se encuentra cancelado ante el SAT.");
                                                             files.deleteXMLFile();
                                                             files.clearWorkingDirectory();
                                                             break;
@@ -173,7 +188,8 @@ namespace RFE
                                                             dbAccess.insertErrorIncorrectInformation(mail.from);
                                                             Console.WriteLine("Error: Comprobante incorrecto ante el SAT");
                                                             Console.WriteLine("Enviando correo de error...");
-                                                            internalMail.sendErrorEmail("El comprobante que mando NO fue aceptado, debido a que el SAT lo marca como incorrecto.");
+                                                            internalMail.sendErrorEmail("El comprobante que mando NO fue aceptado, debido a que el SAT "+
+                                                            "marca incoherencia en uno o más de los siguientes campos: RFC Receptor, RFC Emisor, Total, UUID");
                                                             files.deleteXMLFile();
                                                             files.clearWorkingDirectory();
                                                             break;
@@ -188,12 +204,12 @@ namespace RFE
                                                     dbAccess.insertErrorIncorrectInformation(internalMail.from);
                                                     Console.WriteLine("Error: RFC incorrecto");
                                                     Console.WriteLine("Enviando correo de error...");
-                                                    internalMail.sendErrorEmail("El valor para el RFC del receptor en archivo con identificador '" + invoice.uuid + "' no es válido para ninguna de nuestras empresas");
+                                                    internalMail.sendErrorEmail("El valor para el RFC del receptor en archivo con UUID: '" + invoice.uuid + "' no es válido para ninguna de nuestras empresas");
                                                     //Cleans workspace and already modified files
                                                     files.deleteXMLFile();
                                                     files.clearWorkingDirectory();
                                                 }
-                                                
+
                                             }
                                             else
                                             {
