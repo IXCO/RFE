@@ -221,9 +221,9 @@ namespace RFE
 
                 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                
+                Console.WriteLine("Error: No se pudo leer el UUID. "+ex.Message);
             }
             return uuid;
         }
@@ -253,6 +253,33 @@ namespace RFE
         }
         private bool checkStamp(string stampToprocess,string certificateToprocess)
         {
+            /* Proceess of decypher
+             *      DecryptBase64(certificate)
+             *    + Convert to X509 certificate
+             *    -------------------------------
+             *    = Original certificate
+             *    
+             *      Orginal certificate
+             *    + Asymetric Algorithm
+             *    -------------------------------
+             *    = Public key
+             *    
+             *      SHA HASH
+             *    + Original chain
+             *    -------------------------------
+             *    = Original Hashing Data
+             *    
+             *      DecryptBase64(Original Stamp)
+             *    ------------------------------
+             *    = Signature
+             *    
+             *      Original Hashing Data
+             *    + Signature
+             *      RSA(Public key).SHA1
+             *    ------------------------------    
+             *    = valid? 
+             * 
+             */
             try
             {
                 //Gets certificate
@@ -277,6 +304,30 @@ namespace RFE
                 Console.WriteLine(ex.Message);
                 return false;
 
+            }
+        }
+        private String checkDigitalStamp(String stampInput, String certificateInput)
+        {
+            //Checks for existence
+            if (stampInput != null && certificateInput != null)
+            {
+                Console.WriteLine("Validando sello y certificado...");
+                //Checks for validation and consistency of the cipher stamp and certificate
+                if (!checkStamp(stampInput, certificateInput))
+                {
+                    Console.WriteLine("Error: Sello digital no es correcto");
+                    return "Sello digital y/o certificado incorrecto(s)";
+                }
+                else
+                {
+                    Console.WriteLine("Es correcto!");
+                    return null;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error: Falta sello/certificado");
+                return "Falta sello/certificado";
             }
         }
         public Factura getFactura()
@@ -314,22 +365,8 @@ namespace RFE
                         stampOriginal=rootElement.Attribute("sello").Value;
                     }
                     //Decyphers digital stamp and validates
-                    if (stampOriginal != null && certificateOriginal != null)
-                    {
-                        Console.WriteLine("Validando sello y certificado...");
-                        if (!checkStamp(stampOriginal, certificateOriginal))
-                        {
-                            Console.WriteLine("Error: Sello digital no es correcto");
-                            return invoice = new Factura("Sello digital y/o certificado incorrecto(s)");
-                        }
-                        Console.WriteLine("Es correcto!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Error: Falta sello/certificado");
-                        return invoice = new Factura("Falta sello/certificado");
-                    }
-                    //Looks on on the childs for the needed values of the verification chain
+                    invoice.error = checkDigitalStamp(stampOriginal, certificateOriginal);
+                    //Looks on on the child nodes for the needed values of the verification chain
                     IEnumerable<XElement> allElements = rootElement.Elements();
                     foreach (XElement innerElement in allElements)
                     {
@@ -351,10 +388,10 @@ namespace RFE
                                     values[2] = subElement.Attribute("UUID").Value;
                                 }
                             }
-
                         }
                         else if (elementsName.Contains("Addenda"))
-                        {
+                        { 
+                            //Removes unused optional node
                             rootElement.Element(elementsName).Remove();
                         }
                     }
@@ -368,10 +405,10 @@ namespace RFE
                     }
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Error: Couldn't read nodes properly");
-                    invoice.error = "No se pudieron leer los atributos del XML";
+                    Console.WriteLine("Error: No se pudieron leer los nodos correctamente");
+                    invoice.error = "No se pudieron leer los atributos del XML. Especificación tecnica: "+ex.Message;
                 }
             
             return invoice;
@@ -382,9 +419,11 @@ namespace RFE
             {
                 XmlReaderSettings settings = new XmlReaderSettings();
                 settings.ValidationType = ValidationType.Schema;
+                //Gets namespace validation schema from the XML file
                 settings.ValidationFlags = settings.ValidationFlags | XmlSchemaValidationFlags.ProcessInlineSchema;
                 settings.ValidationFlags = settings.ValidationFlags | XmlSchemaValidationFlags.ReportValidationWarnings ;
                 settings.ValidationFlags = settings.ValidationFlags | XmlSchemaValidationFlags.ProcessSchemaLocation;
+                //Reads file and process correct layout
                 using(XmlReader reader = XmlReader.Create(saveDirectory+nameOfXMLFile,settings)){
                 while (reader.Read()){
 
@@ -396,7 +435,7 @@ namespace RFE
             catch (Exception exc)
             {
                 Console.WriteLine(exc.Message);
-                return exc.Message;
+                return "Especificación tecnica: "+exc.Message;
             }
         }
     }

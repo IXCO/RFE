@@ -230,7 +230,7 @@ namespace RFE
                                             dbAccess.insertErrorIncorrectInformation(internalMail.from);
                                             Console.WriteLine("Error: No se pudo leer el XML");
                                             Console.WriteLine("Enviando correo de error...");
-                                            internalMail.sendErrorEmail("Imposible leer el archivo XML.");
+                                            internalMail.sendErrorEmail("Imposible leer el archivo XML. No se pudo obtener el UUID.");
                                             files.clearWorkingDirectory();
 
                                         }
