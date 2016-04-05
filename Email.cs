@@ -112,7 +112,7 @@ namespace RFE
             "font-family:Verdana, Geneva, sans-serif;  padding:10px; margin-left:5px;}" +
             "img{margin-left:115px;} a{ text-decoration: none; color:#EEBD2B;} </style></head>" +
             "<div class='encabezado'><img width='115' height='85' alt='logo' src='http://192.168.20.66/facturacion/protexa.png'> </div>" +
-            "<div class='cuerpo'>Nuestro sistema de recepción de facturas electrónicas detecto un error al procesar el correo del día " +date +
+            "<div class='cuerpo'>El sistema de recepción de factura electrónica detecto un error al procesar el correo del día " +date +
             ", por lo que no se puede proceder con el trámite correspondiente.<br> " +
             "<b>Error detectado</b> : '" +content + "'<br> " +
             "Favor de revisar y reenviar el correo a la dirección <a href='mailto:"+account+"'>"+account+"</a> .<br>" +

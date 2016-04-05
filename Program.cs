@@ -23,7 +23,7 @@ namespace RFE
             foreach (Factura invoice in pendingInvoices)
             {
                 
-                //If the invoice contains infor it passes
+                //If the invoice contains info it passes
                 if (invoice != null)
                 {
                     Console.WriteLine("Procesando solicitud nueva");
@@ -101,7 +101,7 @@ namespace RFE
                                     Console.WriteLine("Error: Cero adjuntos");
                                     dbAccess.insertErrorMissingFile(internalMail.from);
                                     Console.WriteLine("Enviando correo de error...");
-                                    internalMail.sendErrorEmail("No se encontró ningún archivo en el correo.");
+                                    internalMail.sendErrorEmail("No se encontró ningún archivo anexo en el correo.");
                                 }
                                 else
                                 {
@@ -112,13 +112,13 @@ namespace RFE
                                     {
                                         //Reports error on DB and by mail
                                         dbAccess.insertErrorMissingFile(internalMail.from);
-                                        internalMail.sendErrorEmail("No se encontró ningún archivo XML en el correo.");
+                                        internalMail.sendErrorEmail("No se encontró ningún archivo de tipo XML en el correo.");
 
                                     }
                                     else if (files.hasMultipleXML())
                                     {
                                         //Reports error on DB and by mail
-                                        dbAccess.insertErrorMissingFile(internalMail.from);
+                                        dbAccess.insertErrorMoreThanOneFile(internalMail.from);
                                         Console.WriteLine("Error: Multiples XMLs");
                                         Console.WriteLine("Enviando correo de error...");
                                         internalMail.sendErrorEmail("Múltiples comprobantes en el correo.");
@@ -204,7 +204,7 @@ namespace RFE
                                                     dbAccess.insertErrorIncorrectInformation(internalMail.from);
                                                     Console.WriteLine("Error: RFC incorrecto");
                                                     Console.WriteLine("Enviando correo de error...");
-                                                    internalMail.sendErrorEmail("El valor para el RFC del receptor en archivo con UUID: '" + invoice.uuid + "' no es válido para ninguna de nuestras empresas");
+                                                    internalMail.sendErrorEmail("El valor para el RFC del receptor en el archivo con UUID: '" + invoice.uuid + "' no es válido para ninguna de nuestras empresas");
                                                     //Cleans workspace and already modified files
                                                     files.deleteXMLFile();
                                                     files.clearWorkingDirectory();
@@ -262,8 +262,7 @@ namespace RFE
             Console.WriteLine("Inicia revision de solicitudes pendientes...");
             checkForPendingInvoice();
             Console.WriteLine("Finaliza proceso.");
-            //TODO: Eliminar para productivo
-            Console.Read();
+
         }
         
     }
