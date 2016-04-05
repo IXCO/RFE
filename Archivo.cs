@@ -398,7 +398,10 @@ namespace RFE
                     //Saves working file
                     rootElement.Save(saveDirectory + nameOfXMLFile);
                     //Checks squema vs file layout
-                    invoice.error=hasCorrectSchema();
+                    if (invoice.error == null)
+                    {
+                        invoice.error = hasCorrectSchema();
+                    }
                     if (invoice.error == null)
                     {
                         invoice = new Factura(values[0], values[1], values[2], values[3], values[4]);

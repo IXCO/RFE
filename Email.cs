@@ -14,6 +14,7 @@ namespace RFE
     class Email
     {
 
+
         public string subject;
         public string date;
         public string from;

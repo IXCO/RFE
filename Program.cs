@@ -262,7 +262,6 @@ namespace RFE
             Console.WriteLine("Inicia revision de solicitudes pendientes...");
             checkForPendingInvoice();
             Console.WriteLine("Finaliza proceso.");
-
         }
         
     }
