@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using System.Xml;
 using System.Data.OleDb;
 using System.IO;
+using System.Web;
 using System.Xml.XPath;
 using System.Xml.Xsl;
 using Limilabs.Mail;
@@ -246,9 +247,12 @@ namespace RFE
 
             //Transformation
             myXslTrans.Transform(myXPathDoc, null, myWriter);
-
+            //Decodifier
+            StringWriter decodedstr = new StringWriter();
+            HttpUtility.HtmlDecode(str.ToString(), decodedstr);
+            var resulttostring = decodedstr.ToString();
             //result
-            return Encoding.UTF8.GetBytes(str.ToString());
+            return Encoding.UTF8.GetBytes(resulttostring);
                        
         }
         private bool checkStamp(string stampToprocess,string certificateToprocess)
@@ -401,6 +405,10 @@ namespace RFE
                     if (invoice.error == null)
                     {
                         invoice.error = hasCorrectSchema();
+                    }
+                    else
+                    {
+                        invoice.invalidStamp = 1;
                     }
                     if (invoice.error == null)
                     {

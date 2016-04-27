@@ -214,7 +214,14 @@ namespace RFE
                                             else
                                             {
                                                 //Reports error on DB and by mail
-                                                dbAccess.insertErrorIncorrectInformation(internalMail.from);
+                                                if (invoice.invalidStamp == 0)
+                                                {
+                                                    dbAccess.insertErrorIncorrectInformation(internalMail.from);
+                                                }
+                                                else
+                                                {
+                                                    dbAccess.insertErrorIncorrectStamp(internalMail.from);
+                                                }
                                                 Console.WriteLine("Error: Faltan campos en el XML");
                                                 Console.WriteLine("Enviando correo de error...");
                                                 internalMail.sendErrorEmail("Faltas al Anexo 20, faltas al esquema del archivo. '" + invoice.error + "'");

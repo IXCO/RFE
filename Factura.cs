@@ -14,6 +14,7 @@ namespace RFE
         public string total;
         public string folio;
         public string error;
+        public int invalidStamp = 0;
         
         public Factura(String RecepientRFC, String SenderRFC, String Uuid, String Total,String Folio)
         {

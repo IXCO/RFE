@@ -393,5 +393,27 @@ namespace RFE
             connection.Close();
             return success;
         }
+        public Boolean insertErrorIncorrectStamp(String sender)
+        {
+            bool success = true;
+            connection.Open();
+            String statement = "INSERT INTO errores_recep (tipo_error,correo,fecha)  VALUES('Sello o certificado incorrecto','" + sender + "','" + DateTime.Today.ToShortDateString() + "');";
+
+            try
+            {
+                MySqlCommand command = new MySqlCommand(statement, connection);
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException)
+            {
+                success = false;
+            }
+            finally
+            {
+                connection.Dispose();
+            }
+            connection.Close();
+            return success;
+        }
     }
 }
