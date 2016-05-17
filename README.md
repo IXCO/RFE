@@ -14,7 +14,7 @@ __Basic function:__
 
 - **Receive:** On one centralized email account.
 - **Validate**: According to the regulations of SAT and industries information.
-- **Register**: Export all data to a database.
+- **Register**: Mark data as pending for further use on the finance procedure.
 - **Storage**: Save and backup all digital files.
 
 ## Requirements
@@ -44,5 +44,6 @@ private static string database = "mydatabase";
 
 - Structure of the database would most likely be different, therefore the queries will need to be updated.
 - Policies for reception may vary, according to specification.
+- Attach information called 'Addenda', is deleted by default to minimize the exponential creation of new tables.
 
 *Mundo Inmobiliario S.A*
