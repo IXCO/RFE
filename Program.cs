@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using Limilabs.Mail;
 using Limilabs.Client.POP3;
 using Limilabs.Mail.MIME;
-
+using RestSharp;
 
 namespace RFE
 {
     class Program
     {
-        
+        private static String exportFileDirectory = "C:\\recepcion";
         static void checkForPendingInvoice()
         {
             ControladorBD dbAccess = new ControladorBD();
@@ -40,6 +40,10 @@ namespace RFE
                         dbAccess.getRequesterEmail(request);
                         mail.from = request.requesterEmail;
                         Console.WriteLine("Enviando correo a solicitante");
+                        //IRestResponse response = mail.sendComposeMail(emailContent, request.uuid, request.society.ToString());
+                        //if (response.Content.Contains("Queued"))
+                        //{
+                        //}
                         mail.sendAuthorizationEmail(emailContent, request.uuid, request.society.ToString());
                         dbAccess.getChiefEmail(request);
                         mail.from = request.chiefEmail;
@@ -101,6 +105,7 @@ namespace RFE
                                     Console.WriteLine("Error: Cero adjuntos");
                                     dbAccess.insertErrorMissingFile(internalMail.from);
                                     Console.WriteLine("Enviando correo de error...");
+                                    internalMail.subject = "Error de recepción";
                                     internalMail.sendErrorEmail("No se encontró ningún archivo anexo en el correo.");
                                 }
                                 else
@@ -110,8 +115,16 @@ namespace RFE
                                     //Checks for XML file and no more than one
                                     if (files.hasNoXML())
                                     {
+                                        Console.WriteLine("Error: Sin XML");
+                                        Console.WriteLine("Enviando correo de error...");
                                         //Reports error on DB and by mail
                                         dbAccess.insertErrorMissingFile(internalMail.from);
+                                        internalMail.subject = "Error de recepción";
+                                        //IRestResponse response = internalMail.sendComposeMail("", "", "");
+                                        //if (response.Content.Contains("Queued"))
+                                        //{
+                                        //}
+                                        
                                         internalMail.sendErrorEmail("No se encontró ningún archivo de tipo XML en el correo.");
 
                                     }
@@ -121,6 +134,7 @@ namespace RFE
                                         dbAccess.insertErrorMoreThanOneFile(internalMail.from);
                                         Console.WriteLine("Error: Multiples XMLs");
                                         Console.WriteLine("Enviando correo de error...");
+                                        internalMail.subject = "Error de recepción";
                                         internalMail.sendErrorEmail("Múltiples comprobantes en el correo.");
 
                                     }
@@ -179,6 +193,7 @@ namespace RFE
                                                             dbAccess.insertCanceled(files.nameOfXMLFile, invoice.recepientRFC, invoice.senderRFC, invoice.folio);
                                                             Console.WriteLine("Error: Comprobante cancelado");
                                                             Console.WriteLine("Enviando correo de error...");
+                                                            internalMail.subject = "Error de recepción";
                                                             internalMail.sendErrorEmail("El comprobante con UUID: '"+invoice.uuid+"' que mando NO fue aceptado, debido a que se encuentra cancelado ante el SAT.");
                                                             files.deleteXMLFile();
                                                             files.clearWorkingDirectory();
@@ -188,6 +203,7 @@ namespace RFE
                                                             dbAccess.insertErrorIncorrectInformation(mail.from);
                                                             Console.WriteLine("Error: Comprobante incorrecto ante el SAT");
                                                             Console.WriteLine("Enviando correo de error...");
+                                                            internalMail.subject = "Error de recepción";
                                                             internalMail.sendErrorEmail("El comprobante que mando NO fue aceptado, debido a que el SAT "+
                                                             "marca incoherencia en uno o más de los siguientes campos: RFC Receptor, RFC Emisor, Total, UUID");
                                                             files.deleteXMLFile();
@@ -204,6 +220,7 @@ namespace RFE
                                                     dbAccess.insertErrorIncorrectInformation(internalMail.from);
                                                     Console.WriteLine("Error: RFC incorrecto");
                                                     Console.WriteLine("Enviando correo de error...");
+                                                    internalMail.subject = "Error de recepción";
                                                     internalMail.sendErrorEmail("El valor para el RFC del receptor en el archivo con UUID: '" + invoice.uuid + "' no es válido para ninguna de nuestras empresas");
                                                     //Cleans workspace and already modified files
                                                     files.deleteXMLFile();
@@ -224,6 +241,7 @@ namespace RFE
                                                 }
                                                 Console.WriteLine("Error: Faltan campos en el XML");
                                                 Console.WriteLine("Enviando correo de error...");
+                                                internalMail.subject = "Error de recepción";
                                                 internalMail.sendErrorEmail("Faltas al Anexo 20, faltas al esquema del archivo. '" + invoice.error + "'");
                                                 files.deleteXMLFile();
                                                 files.clearWorkingDirectory();
@@ -237,6 +255,7 @@ namespace RFE
                                             dbAccess.insertErrorIncorrectInformation(internalMail.from);
                                             Console.WriteLine("Error: No se pudo leer el XML");
                                             Console.WriteLine("Enviando correo de error...");
+                                            internalMail.subject = "Error de recepción";
                                             internalMail.sendErrorEmail("Imposible leer el archivo XML. No se pudo obtener el UUID.");
                                             files.clearWorkingDirectory();
 
@@ -265,10 +284,18 @@ namespace RFE
                 Console.WriteLine("Re agendando tarea...");
             }
             Console.WriteLine("Fin de receptor");
+            
             //Starts second section of request-invoice
             Console.WriteLine("Inicia revision de solicitudes pendientes...");
             checkForPendingInvoice();
             Console.WriteLine("Finaliza proceso.");
+            //Starts exporting files and information to the ftp server and database
+            Console.WriteLine("Inicia exportación");
+            System.Diagnostics.Process exportingProcess = new System.Diagnostics.Process();
+            exportingProcess.StartInfo.FileName = exportFileDirectory + "\\import2.cmd";
+            exportingProcess.StartInfo.WorkingDirectory = exportFileDirectory;
+            exportingProcess.Start();
+            Console.WriteLine("Finaliza exportación");
         }
         
     }
