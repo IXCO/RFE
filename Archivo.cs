@@ -16,10 +16,12 @@ using Limilabs.Mail;
 using Limilabs.Client.POP3;
 using Limilabs.Mail.MIME;
 using System.Security.Cryptography;
+using NLog;
 namespace RFE
 {
     class Archivo
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         public String nameOfPDFFile;
         public String nameOfXMLFile;
         private String saveDirectory = "C:\\facturas\\";
@@ -101,8 +103,10 @@ namespace RFE
                 {
                     File.Delete(nameOfFile);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Logger.Warn("Error al guardar archivo");
+                    Logger.Warn(ex.Message);
                 }
             }
             foreach (String nameOfFile in Directory.GetFiles(originalsDirectory))
@@ -111,8 +115,10 @@ namespace RFE
                 {
                     File.Delete(nameOfFile);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Logger.Warn("Error al guardar archivo");
+                    Logger.Warn(ex.Message);
                 }
             }
             foreach (String nameOfFile in Directory.GetFiles(saveDirectory))
@@ -121,8 +127,10 @@ namespace RFE
                 {
                     File.Delete(nameOfFile);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Logger.Warn("Error al guardar archivo");
+                    Logger.Warn(ex.Message);
                 }
             }
         }
@@ -134,8 +142,10 @@ namespace RFE
                 {
                     File.Delete(nameOfFile);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Logger.Warn("Error al limpiar directorio");
+                    Logger.Warn(ex.Message);
                 }
             }
             
@@ -224,7 +234,7 @@ namespace RFE
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: No se pudo leer el UUID. "+ex.Message);
+                Logger.Warn("Error: No se pudo leer el UUID. " + ex.Message);
             }
             return uuid;
         }
@@ -304,8 +314,8 @@ namespace RFE
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: No se pudo desencriptar el sello. ");
-                Console.WriteLine(ex.Message);
+                Logger.Warn("Error: No se pudo desencriptar el sello. ");
+                Logger.Warn(ex.Message);
                 return false;
 
             }
@@ -315,22 +325,22 @@ namespace RFE
             //Checks for existence
             if (stampInput != null && certificateInput != null)
             {
-                Console.WriteLine("Validando sello y certificado...");
+                Logger.Debug("Validando sello y certificado...");
                 //Checks for validation and consistency of the cipher stamp and certificate
                 if (!checkStamp(stampInput, certificateInput))
                 {
-                    Console.WriteLine("Error: Sello digital no es correcto");
+                    Logger.Warn("Error: Sello digital no es correcto");
                     return "Sello digital y/o certificado incorrecto(s)";
                 }
                 else
                 {
-                    Console.WriteLine("Es correcto!");
+                    Logger.Debug("Es correcto!");
                     return null;
                 }
             }
             else
             {
-                Console.WriteLine("Error: Falta sello/certificado");
+                Logger.Warn("Error: Falta sello/certificado");
                 return "Falta sello/certificado";
             }
         }
@@ -418,7 +428,7 @@ namespace RFE
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error: No se pudieron leer los nodos correctamente");
+                    Logger.Warn("Error: No se pudieron leer los nodos correctamente");
                     invoice.error = "No se pudieron leer los atributos del XML. Especificación tecnica: "+ex.Message;
                 }
             
@@ -445,7 +455,7 @@ namespace RFE
             }
             catch (Exception exc)
             {
-                Console.WriteLine(exc.Message);
+                Logger.Warn(exc.Message);
                 return "Especificación tecnica: "+exc.Message;
             }
         }

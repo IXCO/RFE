@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using NLog;
 namespace RFE
 {
     class ControladorBD
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private MySqlConnection connection;
         public ControladorBD()
@@ -27,8 +29,10 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Console.WriteLine("Error en conexión a MYSQL");
+                Console.WriteLine(ex.Message);
                 success = false;
             }
             finally
@@ -64,9 +68,10 @@ namespace RFE
                 }
                 request.uuid= invoice.uuid;
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-
+                Console.WriteLine("Error en conexión a MYSQL");
+                Console.WriteLine(ex.Message);
             }
             finally
             {
@@ -96,9 +101,10 @@ namespace RFE
                    
                 }
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
             }
             finally
             {
@@ -124,9 +130,10 @@ namespace RFE
                     request.department = reader.GetString(1);
                 }
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
             }
             finally
             {
@@ -158,9 +165,10 @@ namespace RFE
                     index++;
                 }
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-                
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
             }
             finally
             {
@@ -185,9 +193,10 @@ namespace RFE
                 }
 
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
             }
             finally
             {
@@ -211,9 +220,10 @@ namespace RFE
                 }
 
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
             }
             finally
             {
@@ -223,22 +233,30 @@ namespace RFE
             return exist;
         }
 
-        public void insertRequest(Solicitud request)
+        public Boolean insertRequest(Solicitud request)
         {
+            Boolean success = true;
             connection.Open();
             String statement = "INSERT INTO factura (uuid_fkey, soc_fkey) VALUES('" + request.uuid + "'," + request.society.ToString()+ ");";
             try
             {
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
+                
             }
-            catch (MySqlException)
-            {            }
+            catch (MySqlException ex)
+            {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
+                success = false;
+            }
             finally
             {
                 connection.Dispose();
             }
             connection.Close();
+            return success;
         }
         public Boolean insertPending(String name, String receiverRFC, String senderRFC, String serial)
         {
@@ -250,9 +268,12 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
                 success = false;
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
             }
             finally
             {
@@ -271,8 +292,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally
@@ -293,8 +317,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally
@@ -315,8 +342,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally
@@ -337,8 +367,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally
@@ -359,8 +392,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally
@@ -382,8 +418,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally
@@ -404,8 +443,11 @@ namespace RFE
                 MySqlCommand command = new MySqlCommand(statement, connection);
                 command.ExecuteNonQuery();
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
+                Logger.Warn("Error en conexión a MYSQL");
+                Logger.Warn(ex.Message);
+                Logger.Error(statement);
                 success = false;
             }
             finally

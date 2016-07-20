@@ -11,6 +11,10 @@ namespace RFE
     {
         public String status;
         public String code;
+        /*<summary>
+         * Uses SAT's API to validate the status for the previously generated
+         * invoice. The input must be on the format provided by the documentation.
+        </summary>*/
         public ValidacionSAT(String chain)
         {
             
